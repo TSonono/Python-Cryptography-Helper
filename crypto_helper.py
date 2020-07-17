@@ -20,11 +20,11 @@ class CryptoHelper(object):
         Args:
             ad (str, optional): The associated data to use during
                 encryption/decryption. Defaults to None.
-            initial_nonce (bytes, optional): The nonce to use during
-                encryption/decryption. Defaults to bytes(12).
+            initial_nonce (bytes, optional): The initial nonce value to use
+                during encryption/decryption. Defaults to bytes(12).
             ecdh_curve (EllipticCurve, optional): Which elliptic curve to use
                 in ECDH. Defaults to ec.SECP256R1().
-            aead_class (ChaCha20Poly1305 || AESCCM || AESCCM, optional): The
+            aead_class (ChaCha20Poly1305 || AESCCM || AESGCM, optional): The
                 AEAD to use during encryption/decryption.
                 Defaults to ChaCha20Poly1305.
         """
@@ -43,15 +43,14 @@ class CryptoHelper(object):
         Returns:
             bytes: The raw public key in bytes
         """
-        public_key_der = self.public_key.public_bytes(
+        public_key_der = self._public_key.public_bytes(
             encoding=serialization.Encoding.DER,
             format=serialization.PublicFormat.SubjectPublicKeyInfo)
         self._public_key_decoded, _ = der_decoder(
             public_key_der, asn1Spec=rfc5280.SubjectPublicKeyInfo())
         public_key_bits = self._public_key_decoded[1]
         # Remove the first byte, it only indicates if key is compressed
-        return bytes(public_key_bits.asNumbers())[1:].hex()
-        # return bytes(public_key_bits.asNumbers())[1:]
+        return bytes(public_key_bits.asNumbers())[1:]
 
     def create_shared_secred(self, other_public_key):
         """Creates the shared key used to encrypt messages
@@ -76,7 +75,7 @@ class CryptoHelper(object):
         """Encrypt a message using the shared secret
 
         Args:
-            msg (str): Plain text to be encrypted
+            msg (bytes): Plain text to be encrypted
 
         Returns:
             tuple: (bytes: cipher, bytes: nonce)
@@ -89,8 +88,8 @@ class CryptoHelper(object):
             raise PermissionError("No shared key generated yet")
 
         cipher_object = self._aead_class(self._shared_secret)
-        cipher = cipher_object.encrypt(self.nonce, msg, self.ad)
-        result = (bytes(cipher), self.nonce)
+        cipher = cipher_object.encrypt(self._nonce, msg, self._ad)
+        result = (bytes(cipher), self._nonce)
         self.__increment_nonce()
         return result
 
@@ -112,9 +111,9 @@ class CryptoHelper(object):
             raise PermissionError("No shared key generated yet")
 
         cipher_object = self._aead_class(self._shared_secret)
-        return cipher_object.decrypt(nonce, cipher, self.ad)
+        return cipher_object.decrypt(nonce, cipher, self._ad)
 
     def __increment_nonce(self):
-        self.nonce = bytes([sum(self.nonce, NONCE_INCREMENT_VAL)])
-        len_diff = self._nonce_len  - len(self.nonce)
-        self.nonce = b"\0" * len_diff + self.nonce
+        self._nonce = bytes([sum(self._nonce, NONCE_INCREMENT_VAL)])
+        len_diff = self._nonce_len  - len(self._nonce)
+        self._nonce = b"\0" * len_diff + self._nonce
