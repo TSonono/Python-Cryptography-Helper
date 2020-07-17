@@ -31,9 +31,9 @@ class CryptoHelper(object):
         self._shared_secret = None
         self._private_key = ec.generate_private_key(
             ecdh_curve, default_backend())
-        self.public_key = self._private_key.public_key()
-        self.nonce = initial_nonce
-        self.ad = ad
+        self._public_key = self._private_key.public_key()
+        self._nonce = initial_nonce
+        self._ad = ad
         self._aead_class = aead_class
         self._nonce_len = len(initial_nonce)
 
