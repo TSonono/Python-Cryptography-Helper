@@ -62,11 +62,13 @@ class CryptoHelper(object):
 
         other_public_key_asn1 = rfc5280.SubjectPublicKeyInfo()
         other_public_key_asn1["algorithm"] = algorithm
-        other_public_key_asn1['subjectPublicKey'] = univ.BitString.fromOctetString(
-            RFC_5280_UNCROMPRESSED_BYTE + other_public_key)
+        other_public_key_asn1['subjectPublicKey'] = (
+            univ.BitString.fromOctetString(
+                RFC_5280_UNCROMPRESSED_BYTE + other_public_key))
 
         other_public_key_der = serialization.load_der_public_key(
-            der_encoder(other_public_key_asn1, asn1Spec=rfc5280.SubjectPublicKeyInfo()),
+            der_encoder(other_public_key_asn1,
+                        asn1Spec=rfc5280.SubjectPublicKeyInfo()),
             backend=default_backend())
         self._shared_secret = self._private_key.exchange(
             ec.ECDH(), other_public_key_der)
@@ -115,5 +117,5 @@ class CryptoHelper(object):
 
     def __increment_nonce(self):
         self._nonce = bytes([sum(self._nonce, NONCE_INCREMENT_VAL)])
-        len_diff = self._nonce_len  - len(self._nonce)
+        len_diff = self._nonce_len - len(self._nonce)
         self._nonce = b"\0" * len_diff + self._nonce
