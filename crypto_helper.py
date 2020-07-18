@@ -8,13 +8,13 @@ from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.ciphers import aead
 
 RFC_5280_UNCROMPRESSED_BYTE = b'\x04'
-NONCE_INCREMENT_VAL = 2
 
 
 class CryptoHelper(object):
 
     def __init__(self, ad=None, initial_nonce=bytes(12),
-                 ecdh_curve=ec.SECP256R1(), aead_class=aead.ChaCha20Poly1305):
+                 ecdh_curve=ec.SECP256R1(), aead_class=aead.ChaCha20Poly1305,
+                 nonce_increment=2):
         """Helper class for cryptographic operations using bytes to interface
 
         Args:
@@ -27,7 +27,16 @@ class CryptoHelper(object):
             aead_class (ChaCha20Poly1305 || AESCCM || AESGCM, optional): The
                 AEAD to use during encryption/decryption.
                 Defaults to ChaCha20Poly1305.
+            nonce_increment (int): The value that the nonce should be
+                incremented with for each encrypted message
+
+        Raises:
+            ValueError: If the nonce_increment argument is 0
         """
+        if (nonce_increment == 0):
+            raise ValueError("Nonce increment must not be 0")
+        self.nonce_increment = nonce_increment
+
         self._shared_secret = None
         self._private_key = ec.generate_private_key(
             ecdh_curve, default_backend())
@@ -116,6 +125,6 @@ class CryptoHelper(object):
         return cipher_object.decrypt(nonce, cipher, self._ad)
 
     def __increment_nonce(self):
-        self._nonce = bytes([sum(self._nonce, NONCE_INCREMENT_VAL)])
+        self._nonce = bytes([sum(self._nonce, self.nonce_increment)])
         len_diff = self._nonce_len - len(self._nonce)
         self._nonce = b"\0" * len_diff + self._nonce
