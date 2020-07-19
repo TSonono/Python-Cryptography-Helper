@@ -43,7 +43,7 @@ Some notes regarding the helper class.
 ### Nonce
 The nonce can be set to an initial value when instantiating an object of the CryptoHelper class. The object will then internally increment the nonce for each encrypted message. Therefore, the nonce is unique for each encrypted message.
 ### Private members
-Most current class members are private to ensure that it is not possible to alter the keys and nonce (in order to prevent a nonce from being used more then once for a shared particular key). Also the AEAD class and the associated data (ad) are not modifiable since this could break the encryption/decryption process. The only member that can be altered is the `nonce_increment` member.
+All current class members are private to ensure that it is not possible to alter the keys and nonce (in order to prevent a nonce from being used more then once for a shared particular key). Also the AEAD class and the associated data (ad) are not modifiable since this could break the encryption/decryption process. The nonce increment value is private so that it can never be set to 0 after instantiation.
 
 ## TODO
 - Incorporate the ability to check the authenticity of signed messages.

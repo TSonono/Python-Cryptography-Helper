@@ -35,11 +35,12 @@ class CryptoHelper(object):
         """
         if (nonce_increment == 0):
             raise ValueError("Nonce increment must not be 0")
-        self.nonce_increment = nonce_increment
+        self._nonce_increment = nonce_increment
 
-        self._shared_secret = None
         self._private_key = ec.generate_private_key(
             ecdh_curve, default_backend())
+
+        self._shared_secret = None
         self._public_key = self._private_key.public_key()
         self._nonce = initial_nonce
         self._ad = ad
@@ -125,6 +126,6 @@ class CryptoHelper(object):
         return cipher_object.decrypt(nonce, cipher, self._ad)
 
     def __increment_nonce(self):
-        self._nonce = bytes([sum(self._nonce, self.nonce_increment)])
+        self._nonce = bytes([sum(self._nonce, self._nonce_increment)])
         len_diff = self._nonce_len - len(self._nonce)
         self._nonce = b"\0" * len_diff + self._nonce
